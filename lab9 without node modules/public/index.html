@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 9: TypeScript Exchange</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .exchange-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 350px;
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        .price {
+            font-size: 2.5em;
+            color: #27ae60;
+            font-weight: bold;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        .wallet {
+            background: #eee;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .wallet p { margin: 5px 0; font-size: 1.1em; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            transition: background 0.2s;
+        }
+        #btn-buy { background-color: #27ae60; }
+        #btn-buy:hover { background-color: #219150; }
+        #btn-sell { background-color: #c0392b; }
+        #btn-sell:hover { background-color: #a93226; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="exchange-box">
+        <h1>TS Crypto Exchange</h1>
+        
+        <div id="price" class="price">Loading...</div>
+        
+        <div class="wallet">
+            <h3>Your Wallet</h3>
+            <p>USD: <span id="usd">0.00</span></p>
+            <p>Coins: <span id="crypto">0</span></p>
+        </div>
+
+        <div class="btn-group">
+            <button id="btn-buy" disabled>BUY</button>
+            <button id="btn-sell" disabled>SELL</button>
+        </div>
+    </div>
+
+    <script src="/js/client.js"></script>
+</body>
+</html>
