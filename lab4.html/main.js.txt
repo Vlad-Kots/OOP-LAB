@@ -1,0 +1,229 @@
+let currentDisplayedUsers = [];
+let isEditMode = false;
+
+document.addEventListener('DOMContentLoaded', init);
+
+function init() {
+    const mainDiv = document.getElementById('main');
+
+    const header = document.createElement('header');
+    header.id = 'header';
+    
+    const navItems = ['User Rating', 'News', 'Contacts', 'About'];
+    navItems.forEach(item => {
+        const btn = document.createElement('button');
+        btn.textContent = item;
+        btn.className = 'nav-btn';
+        btn.onclick = () => {
+            const contentTitle = document.getElementById('content-title');
+            if (contentTitle) contentTitle.textContent = item;
+        };
+        header.appendChild(btn);
+    });
+    mainDiv.appendChild(header);
+
+    const mainContainer = document.createElement('main');
+    mainContainer.id = 'main-container';
+
+    const leftPanel = document.createElement('div');
+    leftPanel.id = 'leftPanel';
+    
+    const content = document.createElement('div');
+    content.id = 'content';
+    
+    const rightPanel = document.createElement('div');
+    rightPanel.id = 'rightPanel';
+
+    [leftPanel, content, rightPanel].forEach(panel => {
+        const loader = document.createElement('div');
+        loader.className = 'loader';
+        panel.appendChild(loader);
+    });
+
+    mainContainer.append(leftPanel, content, rightPanel);
+    mainDiv.appendChild(mainContainer);
+
+    const footer = document.createElement('footer');
+    footer.innerHTML = `
+        <div style="float:left; width: 45%;">
+            <strong>Current users:</strong> <span id="current-users-count">0</span>
+        </div>
+        <div style="float:right; width: 45%;">
+            <strong>New users:</strong> ${getNewUsers().map(u => u.firstname).join(', ')}
+        </div>
+    `;
+    mainDiv.appendChild(footer);
+
+    const contentTitle = document.createElement('h2');
+    contentTitle.id = 'content-title';
+    content.insertBefore(contentTitle, content.firstChild);
+
+    setTimeout(() => {
+        const contentLoader = content.querySelector('.loader');
+        if (contentLoader) contentLoader.remove();
+
+        const noUsersMsg = document.createElement('p');
+        noUsersMsg.textContent = 'No users';
+        content.appendChild(noUsersMsg);
+
+        const getUsersBtn = document.createElement('button');
+        getUsersBtn.textContent = 'Get Users';
+        getUsersBtn.onclick = async () => {
+            noUsersMsg.textContent = 'Loading...';
+            const users = await fetchUsers();
+            currentDisplayedUsers = users;
+            
+            while (content.lastChild && content.lastChild !== contentTitle) {
+                content.removeChild(content.lastChild);
+            }
+
+            renderTable(content);
+            updateFooterCount();
+            updateScoreSum(); 
+        };
+        content.appendChild(getUsersBtn);
+
+    }, 1000);
+
+    setTimeout(() => {
+        const lpLoader = leftPanel.querySelector('.loader');
+        if (lpLoader) lpLoader.remove();
+
+        const searchInput = document.createElement('input');
+        searchInput.placeholder = 'Search...';
+        
+        const searchBtn = document.createElement('button');
+        searchBtn.textContent = 'Find';
+        searchBtn.onclick = () => {
+            const query = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('#users-table tbody tr');
+            
+            rows.forEach(row => {
+                row.classList.remove('highlight');
+                if (row.innerText.toLowerCase().includes(query) && query !== '') {
+                    row.classList.add('highlight');
+                }
+            });
+        };
+
+        leftPanel.appendChild(searchInput);
+        leftPanel.appendChild(searchBtn);
+    }, 1000);
+
+    setTimeout(() => {
+        const rpLoader = rightPanel.querySelector('.loader');
+        if (rpLoader) rpLoader.remove();
+
+        const scoreDiv = document.createElement('div');
+        scoreDiv.id = 'total-score';
+        scoreDiv.innerHTML = `<strong>Total Score:</strong> 0`;
+        rightPanel.appendChild(scoreDiv);
+
+        const editDiv = document.createElement('div');
+        editDiv.style.marginTop = '20px';
+        
+        const editCheckbox = document.createElement('input');
+        editCheckbox.type = 'checkbox';
+        editCheckbox.id = 'edit-check';
+        
+        const editLabel = document.createElement('label');
+        editLabel.htmlFor = 'edit-check';
+        editLabel.textContent = ' Edit table';
+
+        editCheckbox.onchange = (e) => {
+            isEditMode = e.target.checked;
+            const contentDiv = document.getElementById('content');
+            if (currentDisplayedUsers.length > 0) {
+                const oldTable = document.getElementById('users-table');
+                if (oldTable) oldTable.remove();
+                renderTable(contentDiv);
+            }
+        };
+
+        editDiv.appendChild(editCheckbox);
+        editDiv.appendChild(editLabel);
+        rightPanel.appendChild(editDiv);
+
+    }, 1000);
+}
+
+function renderTable(container) {
+    const table = document.createElement('table');
+    table.id = 'users-table';
+    
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    const headers = ['Firstname', 'Lastname', 'Score'];
+    if (isEditMode) headers.push('Action');
+
+    headers.forEach((text, index) => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        if (index === 0) {
+            th.title = "Click to sort";
+            th.onclick = () => {
+                currentDisplayedUsers.sort((a, b) => a.firstname.localeCompare(b.firstname));
+                const oldTable = document.getElementById('users-table');
+                if (oldTable) oldTable.remove();
+                renderTable(container);
+            };
+        }
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    currentDisplayedUsers.forEach((user, index) => {
+        const tr = document.createElement('tr');
+        
+        const tdFirst = document.createElement('td');
+        tdFirst.textContent = user.firstname;
+        
+        const tdLast = document.createElement('td');
+        tdLast.textContent = user.lastname;
+        
+        const tdScore = document.createElement('td');
+        tdScore.textContent = user.score;
+
+        tr.append(tdFirst, tdLast, tdScore);
+
+        if (isEditMode) {
+            const tdAction = document.createElement('td');
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Delete';
+            delBtn.style.backgroundColor = '#ff4444';
+            delBtn.style.color = 'white';
+            delBtn.onclick = () => {
+                currentDisplayedUsers.splice(index, 1);
+                const oldTable = document.getElementById('users-table');
+                if (oldTable) oldTable.remove();
+                renderTable(container);
+                updateScoreSum();
+                updateFooterCount();
+            };
+            tdAction.appendChild(delBtn);
+            tr.appendChild(tdAction);
+        }
+
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    container.appendChild(table);
+}
+
+function updateScoreSum() {
+    const scoreDiv = document.getElementById('total-score');
+    if (scoreDiv) {
+        const total = currentDisplayedUsers.reduce((sum, user) => sum + user.score, 0);
+        scoreDiv.innerHTML = `<strong>Total Score:</strong> ${total}`;
+    }
+}
+
+function updateFooterCount() {
+    const footerCount = document.getElementById('current-users-count');
+    if (footerCount) {
+        footerCount.textContent = currentDisplayedUsers.length;
+    }
+}

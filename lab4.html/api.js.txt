@@ -1,0 +1,35 @@
+const dbUsers = [
+    { firstname: 'Ivan', lastname: 'Petrenko', score: 85 },
+    { firstname: 'Maria', lastname: 'Kovalenko', score: 92 },
+    { firstname: 'Oleg', lastname: 'Sydorenko', score: 78 },
+    { firstname: 'Anna', lastname: 'Melnyk', score: 88 },
+    { firstname: 'Dmytro', lastname: 'Bondar', score: 65 },
+    { firstname: 'Yulia', lastname: 'Tkachenko', score: 95 },
+    { firstname: 'Andriy', lastname: 'Shevchenko', score: 99 },
+    { firstname: 'Olena', lastname: 'Boyko', score: 74 },
+    { firstname: 'Serhiy', lastname: 'Kravchenko', score: 81 },
+    { firstname: 'Natali', lastname: 'Koval', score: 89 },
+    { firstname: 'Pavlo', lastname: 'Oliynyk', score: 60 },
+    { firstname: 'Kateryna', lastname: 'Shevchuk', score: 91 },
+    { firstname: 'Maksym', lastname: 'Polisщуk', score: 77 },
+    { firstname: 'Viktoria', lastname: 'Lysenko', score: 83 },
+    { firstname: 'Roman', lastname: 'Tkachuk', score: 70 },
+    { firstname: 'Tetiana', lastname: 'Moroz', score: 86 },
+    { firstname: 'Oleksandr', lastname: 'Savchenko', score: 94 },
+    { firstname: 'Iryna', lastname: 'Rudenko', score: 79 },
+    { firstname: 'Volodymyr', lastname: 'Yakovenko', score: 68 },
+    { firstname: 'Svitlana', lastname: 'Didenko', score: 82 }
+];
+
+function fetchUsers() {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const shuffled = [...dbUsers].sort(() => 0.5 - Math.random());
+            resolve(shuffled.slice(0, 10));
+        }, 1000);
+    });
+}
+
+function getNewUsers() {
+    return dbUsers.slice(0, 5);
+}
