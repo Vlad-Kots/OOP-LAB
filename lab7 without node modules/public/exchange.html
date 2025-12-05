@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto Exchange (WS)</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .exchange-box { max-width: 400px; margin: 30px auto; padding: 20px; text-align: center; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .price-display { font-size: 2.5em; font-family: monospace; font-weight: bold; color: #27ae60; margin: 20px 0; }
+        .wallet { background: #f3f3f3; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: left; }
+        .wallet p { margin: 5px 0; font-size: 1.1em; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+        .btn-buy { background-color: #27ae60; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-size: 1.1em; }
+        .btn-sell { background-color: #c0392b; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-size: 1.1em; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="nav-btn" onclick="location.href='/'">Home</button>
+        <button class="nav-btn" onclick="location.href='/chat.html'">Chat</button>
+        <button class="nav-btn" onclick="location.href='/exchange.html'">Exchange</button>
+    </header>
+
+    <div class="exchange-box">
+        <h1>Crypto Exchange</h1>
+        <div class="price-display" id="price">Loading...</div>
+
+        <div class="wallet">
+            <h3>Your Wallet:</h3>
+            <p>💵 USD: <span id="usd">0.00</span> $</p>
+            <p>🪙 Coins: <span id="crypto">0</span></p>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-buy" id="btn-buy" onclick="trade('buy')">BUY</button>
+            <button class="btn-sell" id="btn-sell" onclick="trade('sell')">SELL</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://' + window.location.host);
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'price-update') {
+                document.getElementById('price').innerText = data.price + ' $';
+                updateButtons(parseFloat(data.price));
+            } 
+            else if (data.type === 'balance-update') {
+                document.getElementById('usd').innerText = data.usd;
+                document.getElementById('crypto').innerText = data.crypto;
+            }
+        };
+
+        function trade(action) {
+            socket.send(JSON.stringify({ action: action }));
+        }
+
+        function updateButtons(currentPrice) {
+            const usd = parseFloat(document.getElementById('usd').innerText);
+            const crypto = parseFloat(document.getElementById('crypto').innerText);
+
+            document.getElementById('btn-buy').disabled = usd < currentPrice;
+            document.getElementById('btn-sell').disabled = crypto < 1;
+        }
+    </script>
+</body>
+</html>

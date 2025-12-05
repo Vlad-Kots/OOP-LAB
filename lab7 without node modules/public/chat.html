@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat (SSE)</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .chat-container { max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        #messages-list { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
+        .message { margin-bottom: 8px; padding: 5px 10px; background: #fff; border-radius: 4px; border-left: 3px solid #333; }
+        .input-group { display: flex; gap: 10px; }
+        input { flex: 1; padding: 8px; }
+        button { padding: 8px 16px; background: #333; color: white; border: none; cursor: pointer; }
+        button:hover { background: #555; }
+    </style>
+</head>
+<body>
+    
+    <header>
+        <button class="nav-btn" onclick="location.href='/'">Home</button>
+        <button class="nav-btn" onclick="location.href='/chat.html'">Chat</button>
+        <button class="nav-btn" onclick="location.href='/exchange.html'">Exchange</button>
+    </header>
+
+    <div class="chat-container">
+        <h2>SSE Chat Room</h2>
+
+        <div id="login-screen">
+            <input type="text" id="username" placeholder="Enter Username">
+            <button onclick="joinChat()">Join</button>
+        </div>
+
+        <div id="chat-screen" style="display: none;">
+            <div id="messages-list"></div>
+            <div class="input-group">
+                <input type="text" id="msg-input" placeholder="Type a message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        function joinChat() {
+            const username = document.getElementById('username').value;
+            if (username) {
+                currentUser = username;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('chat-screen').style.display = 'block';
+                startSSE();
+            }
+        }
+
+        function startSSE() {
+            const eventSource = new EventSource('/events');
+
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                renderMessage(data);
+            };
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const message = input.value;
+            if (!message) return;
+
+            await fetch('/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, message })
+            });
+
+            input.value = '';
+        }
+
+        function renderMessage(data) {
+            const list = document.getElementById('messages-list');
+            const div = document.createElement('div');
+            div.className = 'message';
+            
+            let hash = 0;
+            for (let i = 0; i < data.username.length; i++) hash = data.username.charCodeAt(i) + ((hash << 5) - hash);
+            const color = `hsl(${hash % 360}, 70%, 40%)`;
+
+            div.innerHTML = `<strong style="color:${color}">${data.username}</strong> <small>(${data.time})</small>: ${data.message}`;
+            list.appendChild(div);
+            list.scrollTop = list.scrollHeight;
+        }
+    </script>
+</body>
+</html>
